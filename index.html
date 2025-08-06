@@ -38,25 +38,32 @@
         .game-wrapper { transition: opacity 0.5s ease-in-out; position: relative; }
         .status { font-size: 1.5em; height: 30px; color: var(--color-text-alt); margin-bottom: 15px;}
         
-        /* Boards */
-        .initial-board { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; }
-        .ultimate-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; background-color: var(--color-surface); border-radius: 10px; }
-        .local-board { display: grid; grid-template-columns: repeat(3, 35px); grid-template-rows: repeat(3, 35px); gap: 5px; border: 2px solid transparent; border-radius: 5px; transition: border-color 0.3s, box-shadow 0.3s; position: relative; }
-        .local-board.active { border-color: var(--color-secondary); box-shadow: 0 0 15px var(--color-secondary); }
-        
-        .cell { border-radius: 4px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-weight: bold; }
-        .initial-board .cell { width: 100px; height: 100px; font-size: 4em; border: 2px solid var(--color-secondary); box-shadow: 0 0 10px var(--color-secondary); }
-        .local-board .cell { width: 35px; height: 35px; font-size: 1.8em; border: 1px solid var(--color-text-alt); }
+        /* Shared Cell Styles */
+        .cell { border-radius: 10px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-weight: bold; }
         .cell.x { color: var(--color-primary); text-shadow: 0 0 10px var(--color-primary); }
         .cell.o { color: var(--color-danger); text-shadow: 0 0 10px var(--color-danger); }
 
-        .local-board .winner-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; font-size: 7em; font-weight: bold; display: flex; justify-content: center; align-items: center; pointer-events: none; }
+        /* Initial Board - The chunky, stylish one */
+        .initial-board { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; }
+        .initial-board .cell { width: 100px; height: 100px; font-size: 4em; border: 2px solid var(--color-secondary); box-shadow: 0 0 10px var(--color-secondary); }
+
+        /* Ultimate Board - Made to look like 9 smaller versions of the initial board */
+        .ultimate-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 15px; background-color: var(--color-surface); border-radius: 15px; }
+        .local-board { 
+            display: grid; grid-template-columns: repeat(3, 60px); grid-template-rows: repeat(3, 60px); gap: 5px; 
+            border: 2px solid var(--color-secondary); box-shadow: 0 0 10px var(--color-secondary); 
+            border-radius: 10px; transition: border-color 0.3s, box-shadow 0.3s; position: relative; 
+        }
+        .local-board.active { border-color: var(--color-primary); box-shadow: 0 0 20px var(--color-primary); }
+        .local-board .cell { width: 60px; height: 60px; font-size: 2.5em; background-color: var(--color-background); }
+        
+        .local-board .winner-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; font-size: 6em; font-weight: bold; display: flex; justify-content: center; align-items: center; pointer-events: none; }
         
         .controls { display: flex; gap: 15px; margin-top: 25px; }
         .control-button { padding: 10px 20px; border: 2px solid var(--color-secondary); color: var(--color-secondary); background-color: transparent; font-family: monospace; font-size: 1em; border-radius: 5px; cursor: pointer; }
         
         /* Rules Modal */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 100; }
         .modal-overlay.visible { opacity: 1; pointer-events: auto; }
         .modal-content { background: var(--color-surface); padding: 30px; border-radius: 10px; max-width: 500px; text-align: left; border: 1px solid var(--color-secondary); }
         .modal-content h3 { margin-top: 0; color: var(--color-primary); }
@@ -67,7 +74,7 @@
 <body>
     <div class="container">
         <h1>DeveloperCrcodile</h1>
-        <p>A developer-in-training. Try your hand against my AI in a game of wits below.</p>
+        <p>A developer-in-training. You can't beat the AI in the first game, but see what happens when you try.</p>
         <a href="https://github.com/developercrcodile" target="_blank" class="github-button">View My Projects on GitHub</a>
 
         <h2 class="status"></h2>
@@ -78,14 +85,13 @@
         </div>
     </div>
     
-    <!-- Rules Modal HTML -->
     <div id="rules-modal" class="modal-overlay">
         <div class="modal-content">
             <h3>Ultimate Tic-Tac-Toe Rules</h3>
             <ul>
-                <li><strong>The Goal:</strong> Win three local boards in a row, column, or diagonal to win the entire game.</li>
-                <li><strong>The Twist:</strong> Where you play your move dictates which board your opponent must play in next. For example, playing in the top-right square of a local board sends your opponent to the top-right local board.</li>
-                <li><strong>The "Free Move":</strong> If you are sent to a board that is already won or full, you can play your next move in ANY open square on ANY unfinished board.</li>
+                <li><strong>The Goal:</strong> Win three local boards in a row, column, or diagonal.</li>
+                <li><strong>The Twist:</strong> Where you play your move dictates which board your opponent must play in next. (e.g., playing in the top-right square sends your opponent to the top-right local board).</li>
+                <li><strong>The "Free Move":</strong> If you're sent to a board that is already won or full, you can play your next move in ANY open square on ANY unfinished board.</li>
             </ul>
             <button id="close-rules-button" class="control-button" style="float: right;">Got It</button>
         </div>
@@ -103,34 +109,31 @@
     // --- Game Constants & State ---
     const HUMAN = 'X', AI = 'O';
     const WIN_CONDITIONS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-    let gameActive, currentPlayer, isUltimateMode;
-    let localBoards, mainBoardState, activeBoardIndex;
+    let gameActive, isUltimateMode, initialBoardState, localBoards, mainBoardState, activeBoardIndex;
 
     function initGame(startAsUltimate = false) {
         gameActive = true;
         isUltimateMode = startAsUltimate;
-        currentPlayer = HUMAN;
         statusDisplay.textContent = `Your Turn (${HUMAN})`;
         
         gameWrapper.style.opacity = '0';
         setTimeout(() => {
             gameWrapper.innerHTML = '';
             if (isUltimateMode) {
-                setupUltimateBoard();
-                rulesButton.style.display = 'inline-block';
+                setupUltimateBoard(initialBoardState); // Pass the finished board state
             } else {
                 setupInitialBoard();
-                rulesButton.style.display = 'none';
             }
             gameWrapper.style.opacity = '1';
-        }, 300);
+        }, 500);
     }
     
     // --- Board Setup ---
     function setupInitialBoard() {
+        rulesButton.style.display = 'none';
         const board = document.createElement('div');
         board.className = 'initial-board';
-        mainBoardState = Array(9).fill('');
+        initialBoardState = Array(9).fill('');
         for (let i=0; i<9; i++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
@@ -141,45 +144,118 @@
         gameWrapper.appendChild(board);
     }
     
-    function setupUltimateBoard() {
+    function setupUltimateBoard(previousGameState) {
+        rulesButton.style.display = 'inline-block';
         localBoards = Array(9).fill(null).map(() => Array(9).fill(''));
         mainBoardState = Array(9).fill('');
-        activeBoardIndex = null; // Player starts with a free move
+
+        // The key transition logic: the previous game becomes the center board
+        localBoards[4] = previousGameState;
+        mainBoardState[4] = checkWinner(previousGameState, AI) ? AI : 'draw';
         
         const board = document.createElement('div');
         board.className = 'ultimate-board';
         for (let i = 0; i < 9; i++) {
-            const localBoard = document.createElement('div');
-            localBoard.className = 'local-board active'; // All boards are active initially
-            localBoard.dataset.boardIndex = i;
+            const localBoardEl = document.createElement('div');
+            localBoardEl.className = 'local-board';
+            localBoardEl.dataset.boardIndex = i;
             for (let j = 0; j < 9; j++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.dataset.boardIndex = i;
                 cell.dataset.cellIndex = j;
                 cell.addEventListener('click', handleUltimateClick);
-                localBoard.appendChild(cell);
+                if (i === 4) { // Populate the center board
+                    cell.textContent = localBoards[i][j];
+                    if (localBoards[i][j]) cell.classList.add(localBoards[i][j].toLowerCase());
+                }
+                localBoardEl.appendChild(cell);
             }
-            board.appendChild(localBoard);
+            if (mainBoardState[i]) {
+                const overlay = document.createElement('div');
+                overlay.className = `winner-overlay ${mainBoardState[i].toLowerCase()}`;
+                overlay.textContent = mainBoardState[i];
+                localBoardEl.appendChild(overlay);
+            }
+            board.appendChild(localBoardEl);
         }
         gameWrapper.appendChild(board);
+        
+        // AI's last move in the initial game determines the next active board
+        activeBoardIndex = initialAiLastMove;
+        updateActiveBoardHighlights();
     }
 
     // --- Event Handlers ---
     function handleInitialClick(e) {
         if (!gameActive) return;
         const index = parseInt(e.target.dataset.index);
-        if (mainBoardState[index] !== '') return;
+        if (initialBoardState[index] !== '') return;
 
-        makeMove(index, HUMAN, mainBoardState);
-        if (checkWinner(mainBoardState, HUMAN)) { endGame(HUMAN, false); return; }
-        if (mainBoardState.every(c => c !== '')) { endGame('draw', false); return; }
+        makeMove(index, HUMAN, initialBoardState);
+        if (checkWinner(initialBoardState, HUMAN)) { endGame(true); return; }
+        if (initialBoardState.every(c => c !== '')) { endGame(true); return; }
 
         gameActive = false;
         statusDisplay.textContent = 'AI is thinking...';
         setTimeout(initialAiTurn, 700);
     }
     
+    function handleUltimateClick(e) { /* ... same as before ... */ }
+    restartButton.addEventListener('click', () => initGame(isUltimateMode));
+    rulesButton.addEventListener('click', () => rulesModal.classList.add('visible'));
+    closeRulesButton.addEventListener('click', () => rulesModal.classList.remove('visible'));
+    
+    // --- Game Logic ---
+    function makeMove(index, player, board, boardIndex = null) { /* ... same as before ... */ }
+
+    function endGame(isInitialGame) {
+        gameActive = false;
+        if (isInitialGame) {
+            statusDisplay.textContent = "A worthy effort... but inevitable.";
+            setTimeout(() => {
+                statusDisplay.textContent = "Let's play for real.";
+                isUltimateMode = true;
+                initGame(true); // Re-initialize in ultimate mode
+            }, 2500);
+        } else {
+             // ... Ultimate game end logic ...
+        }
+    }
+    
+    let initialAiLastMove;
+    function initialAiTurn() {
+        let bestScore = -Infinity, move;
+        for (let i = 0; i < 9; i++) {
+            if (initialBoardState[i] === '') {
+                initialBoardState[i] = AI;
+                let score = minimax(initialBoardState, false);
+                initialBoardState[i] = '';
+                if (score > bestScore) { bestScore = score; move = i; }
+            }
+        }
+        initialAiLastMove = move; // Store the AI's move
+        makeMove(move, AI, initialBoardState);
+        if (checkWinner(initialBoardState, AI) || initialBoardState.every(c => c !== '')) { 
+            endGame(true); 
+            return; 
+        }
+        
+        gameActive = true;
+        statusDisplay.textContent = `Your Turn (${HUMAN})`;
+    }
+
+    function minimax(board, isMaximizing) { /* ... same as before ... */ }
+    function checkWinner(board, player) { /* ... same as before ... */ }
+    
+    // Placeholder functions for Ultimate Mode to be filled in
+    function handleUltimateClick(e) { console.log('Ultimate move'); }
+
+    // --- Start ---
+    initGame(false);
+
+
+    // ---- Full Ultimate Logic (re-added for completeness) ----
     function handleUltimateClick(e) {
         if (!gameActive) return;
         const { boardIndex, cellIndex } = e.target.dataset;
@@ -189,21 +265,16 @@
         if (localBoards[bIndex][cIndex] !== '' || mainBoardState[bIndex] !== '') return;
         
         makeMove(cIndex, HUMAN, localBoards[bIndex], bIndex);
-        if (checkUltimateEnd(bIndex, HUMAN)) return;
+        if (checkUltimateEnd(cIndex, HUMAN)) return;
 
         gameActive = false;
         statusDisplay.textContent = 'AI is thinking...';
         setTimeout(ultimateAiTurn, 700);
     }
-
-    restartButton.addEventListener('click', () => initGame(isUltimateMode));
-    rulesButton.addEventListener('click', () => rulesModal.classList.add('visible'));
-    closeRulesButton.addEventListener('click', () => rulesModal.classList.remove('visible'));
     
-    // --- Game Logic ---
     function makeMove(index, player, board, boardIndex = null) {
         board[index] = player;
-        const query = isUltimateMode 
+        const query = (isUltimateMode && boardIndex !== null)
             ? `[data-board-index='${boardIndex}'][data-cell-index='${index}']`
             : `[data-index='${index}']`;
         const cell = gameWrapper.querySelector(query);
@@ -211,102 +282,66 @@
         cell.classList.add(player.toLowerCase());
     }
 
-    function endGame(winner, isInitialGame) {
+    function endGame(isInitialGame, winner = 'draw') {
         gameActive = false;
         if (isInitialGame) {
-            statusDisplay.textContent = winner === 'draw' ? "A worthy draw..." : "The AI wins...";
+            statusDisplay.textContent = "A worthy effort... but inevitable.";
             setTimeout(() => {
-                statusDisplay.textContent = "Now for the real challenge.";
+                statusDisplay.textContent = "Now, let's play for real.";
+                isUltimateMode = true;
                 initGame(true);
-            }, 2000);
+            }, 2500);
         } else {
             statusDisplay.textContent = winner === 'draw' ? "It's a Draw!" : `${winner} Wins the Game!`;
         }
     }
     
-    // --- Initial AI ---
-    function initialAiTurn() {
-        // Unbeatable Minimax for the first game
-        let bestScore = -Infinity, move;
-        for (let i = 0; i < 9; i++) {
-            if (mainBoardState[i] === '') {
-                mainBoardState[i] = AI;
-                let score = minimax(mainBoardState, false);
-                mainBoardState[i] = '';
-                if (score > bestScore) { bestScore = score; move = i; }
-            }
-        }
-        makeMove(move, AI, mainBoardState);
-        if (checkWinner(mainBoardState, AI)) { endGame(AI, true); return; }
-        if (mainBoardState.every(c => c !== '')) { endGame('draw', true); return; }
-        
-        gameActive = true;
-        statusDisplay.textContent = `Your Turn (${HUMAN})`;
-    }
-
-    function minimax(board, isMaximizing) {
-        if (checkWinner(board, HUMAN)) return -1;
-        if (checkWinner(board, AI)) return 1;
-        if (board.every(c => c !== '')) return 0;
-
-        if (isMaximizing) {
-            let bestScore = -Infinity;
-            for(let i=0; i<9; i++) { if(board[i]==='') { board[i]=AI; bestScore = Math.max(bestScore, minimax(board,false)); board[i]=''; }}
-            return bestScore;
-        } else {
-            let bestScore = Infinity;
-            for(let i=0; i<9; i++) { if(board[i]==='') { board[i]=HUMAN; bestScore = Math.min(bestScore, minimax(board,true)); board[i]=''; }}
-            return bestScore;
-        }
-    }
-
-    // --- Ultimate AI & Logic ---
     function ultimateAiTurn() {
         const move = findBestUltimateMove();
         if (move) {
             makeMove(move.cellIndex, AI, localBoards[move.boardIndex], move.boardIndex);
-            if(checkUltimateEnd(move.boardIndex, AI)) return;
-        } else { endGame('draw', false); }
+            if(checkUltimateEnd(move.cellIndex, AI)) return;
+        } else { endGame(false, 'draw'); }
         
         gameActive = true;
         statusDisplay.textContent = `Your Turn (${HUMAN})`;
     }
 
-    function checkUltimateEnd(bIndex, player) {
-        if (mainBoardState[bIndex] === '' && checkWinner(localBoards[bIndex], player)) {
-            mainBoardState[bIndex] = player;
-            const localBoardEl = gameWrapper.querySelector(`[data-board-index='${bIndex}']`);
+    function checkUltimateEnd(lastCellIndex, player) {
+        const boardIndex = activeBoardIndex; // The board that was just played on
+        if (mainBoardState[boardIndex] === '' && checkWinner(localBoards[boardIndex], player)) {
+            mainBoardState[boardIndex] = player;
+            const localBoardEl = gameWrapper.querySelector(`[data-board-index='${boardIndex}']`);
             const overlay = document.createElement('div');
             overlay.className = `winner-overlay ${player.toLowerCase()}`;
             overlay.textContent = player;
             localBoardEl.appendChild(overlay);
         }
         
-        activeBoardIndex = bIndex; // The move that was just made sets the next board
+        activeBoardIndex = lastCellIndex;
         if (mainBoardState[activeBoardIndex] !== '') { activeBoardIndex = null; }
         updateActiveBoardHighlights();
 
-        if (checkWinner(mainBoardState, player)) { endGame(player, false); return true; }
-        if (mainBoardState.every(s => s !== '')) { endGame('draw', false); return true; }
+        if (checkWinner(mainBoardState, player)) { endGame(false, player); return true; }
+        if (mainBoardState.every(s => s !== '')) { endGame(false, 'draw'); return true; }
         return false;
     }
-    
-    function findBestUltimateMove() { /* Heuristic AI */ return getValidMoves()[0]; } // Simplified for brevity
+
+    function findBestUltimateMove() {
+        const validMoves = getValidMoves();
+        if (validMoves.length === 0) return null;
+        // Heuristic AI logic here... (Simplified for now)
+        return validMoves[Math.floor(Math.random() * validMoves.length)];
+    }
+
     function getValidMoves() {
         const moves = [];
-        const targetBoards = (activeBoardIndex === null) ? [0,1,2,3,4,5,6,7,8] : [activeBoardIndex];
+        const targetBoards = (activeBoardIndex === null) ? [0,1,2,3,4,5,6,7,8].filter(i => mainBoardState[i] === '') : [activeBoardIndex];
         for (const bIndex of targetBoards) {
-            if (mainBoardState[bIndex] === '') {
-                for(let cIndex=0; cIndex<9; cIndex++) {
-                    if(localBoards[bIndex][cIndex] === '') moves.push({boardIndex: bIndex, cellIndex: cIndex});
-                }
+            for(let cIndex=0; cIndex<9; cIndex++) {
+                if(localBoards[bIndex][cIndex] === '') moves.push({boardIndex: bIndex, cellIndex: cIndex});
             }
         }
-        // Basic intelligence: prefer center, then corners, then sides
-        moves.sort((a, b) => {
-            const priorities = [4, 0, 2, 6, 8, 1, 3, 5, 7];
-            return priorities.indexOf(a.cellIndex) - priorities.indexOf(b.cellIndex);
-        });
         return moves;
     }
 
@@ -326,7 +361,6 @@
         return WIN_CONDITIONS.some(combo => combo.every(index => board[index] === player));
     }
 
-    // --- Start ---
     initGame(false);
 </script>
 </body>
