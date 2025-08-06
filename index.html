@@ -34,12 +34,12 @@
         .game-wrapper { transition: opacity 0.5s ease-in-out; position: relative; }
         .status { font-size: 1.5em; height: 30px; margin-bottom: 15px;}
         
-        .cell { border-radius: 10px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+        .cell { border-radius: 10px; display: flex; justify-content: center; align-items: center; font-weight: bold; transition: opacity 0.3s ease-in-out; cursor: not-allowed; }
         .cell.x { color: var(--color-primary); text-shadow: 0 0 10px var(--color-primary); }
         .cell.o { color: var(--color-danger); text-shadow: 0 0 10px var(--color-danger); }
 
         .initial-board { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; }
-        .initial-board .cell { width: 100px; height: 100px; font-size: 4em; border: 2px solid var(--color-secondary); box-shadow: 0 0 10px var(--color-secondary); }
+        .initial-board .cell { width: 100px; height: 100px; font-size: 4em; border: 2px solid var(--color-secondary); box-shadow: 0 0 10px var(--color-secondary); cursor: pointer; }
 
         .ultimate-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .local-board { 
@@ -48,21 +48,19 @@
             border-radius: 10px; 
             transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
         }
-        /* NEW: Active board scaling */
         .local-board.active {
             transform: scale(1.08);
             z-index: 10;
             box-shadow: 0 0 25px var(--color-secondary);
         }
         .local-board .cell { width: 60px; height: 60px; font-size: 2.5em; background: var(--color-surface); }
+        .local-board.active .cell:not(.x):not(.o) { cursor: pointer; }
         
-        /* NEW: Winner overlay icon */
         .winner-overlay {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             font-size: 8em; font-weight: bold;
             display: flex; justify-content: center; align-items: center;
-            pointer-events: none;
-            opacity: 0;
+            pointer-events: none; opacity: 0;
             transition: opacity 0.3s ease-in-out;
         }
         .local-board.won .winner-overlay { opacity: 1; }
@@ -78,9 +76,9 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header with description restored -->
+        <!-- DESCRIPTION RESTORED -->
         <h1>DeveloperCrcodile</h1>
-        <p>A developer-in-training, exploring the world of self-hosting and servers. You can't beat the AI in the first game, but see what happens when you try.</p>
+        <p>A developer-in-training, exploring the world of self-hosting and servers. Try to beat my AI in a game of Tic-Tac-Toe below!</p>
         <a href="https://github.com/DeveloperCrcodiles" target="_blank" class="github-button">View My Projects on GitHub</a>
 
         <h2 class="status"></h2>
@@ -91,10 +89,9 @@
         </div>
     </div>
     
-    <div id="rules-modal" class="modal-overlay"> <!-- Rules Modal HTML is unchanged --> </div>
+    <div id="rules-modal" class="modal-overlay"> <!-- Rules Modal is unchanged --> </div>
 
 <script>
-    // --- All JavaScript logic from the previous version is here, with key updates ---
     const gameWrapper = document.getElementById('game-wrapper');
     const statusDisplay = document.querySelector('.status');
     const restartButton = document.getElementById('restart-button');
@@ -105,8 +102,10 @@
     const HUMAN = 'X', AI = 'O';
     const WIN_CONDITIONS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
     let gameActive, isUltimateMode, initialBoardState, localBoards, mainBoardState, activeBoardIndex, initialAiLastMove;
+    let aiTurnTimeout = null;
 
     function initGame(startAsUltimate = false) {
+        if (aiTurnTimeout) clearTimeout(aiTurnTimeout);
         gameActive = true;
         isUltimateMode = startAsUltimate;
         statusDisplay.textContent = `Your Turn (${HUMAN})`;
@@ -123,10 +122,23 @@
         }, 500);
     }
     
-    function setupInitialBoard() { /* Unchanged */ }
+    function setupInitialBoard() {
+        if(rulesButton) rulesButton.style.display = 'none';
+        const board = document.createElement('div');
+        board.className = 'initial-board';
+        initialBoardState = Array(9).fill('');
+        for (let i=0; i<9; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.index = i;
+            cell.addEventListener('click', handleInitialClick);
+            board.appendChild(cell);
+        }
+        gameWrapper.appendChild(board);
+    }
     
     function setupUltimateBoard(previousGameState) {
-        rulesButton.style.display = 'inline-block';
+        if(rulesButton) rulesButton.style.display = 'inline-block';
         localBoards = Array(9).fill(null).map(() => Array(9).fill(''));
         mainBoardState = Array(9).fill('');
         localBoards[4] = previousGameState;
@@ -150,7 +162,6 @@
                 }
                 localBoardEl.appendChild(cell);
             }
-            // Add winner overlay if board is already won
             if (mainBoardState[i]) {
                 handleLocalWin(localBoardEl, mainBoardState[i]);
             }
@@ -159,108 +170,92 @@
         gameWrapper.appendChild(board);
         
         activeBoardIndex = initialAiLastMove;
+        if(mainBoardState[activeBoardIndex] !== '') {
+            activeBoardIndex = null;
+        }
         updateActiveBoardHighlights();
     }
-
-    // NEW: Function to handle the visual state of a won local board
+    
     function handleLocalWin(localBoardElement, winner) {
         localBoardElement.classList.add('won');
-        const overlay = document.createElement('div');
-        overlay.className = `winner-overlay ${winner.toLowerCase()}`;
-        overlay.textContent = winner;
-        localBoardElement.appendChild(overlay);
+        if (winner !== 'draw') {
+            const overlay = document.createElement('div');
+            overlay.className = `winner-overlay ${winner.toLowerCase()}`;
+            overlay.textContent = winner;
+            localBoardElement.appendChild(overlay);
+        }
     }
     
     function updateActiveBoardHighlights() {
         document.querySelectorAll('.local-board').forEach(board => {
             const bIndex = parseInt(board.dataset.boardIndex);
-            board.classList.remove('active'); // Remove scaling from all boards
-            if (gameActive && mainBoardState[bIndex] === '') {
+            board.classList.remove('active');
+            if (!gameActive) return;
+            if (mainBoardState[bIndex] === '') {
                 if (activeBoardIndex === null || activeBoardIndex === bIndex) {
-                    board.classList.add('active'); // Add scaling only to active ones
+                    board.classList.add('active');
                 }
             }
         });
     }
 
-    function checkUltimateEnd(lastCellIndex, player) {
-        const boardIndex = activeBoardIndex; 
-        if (boardIndex === null || mainBoardState[boardIndex] !== '') return false;
-
-        if (checkWinner(localBoards[boardIndex], player)) {
-            mainBoardState[boardIndex] = player;
-            handleLocalWin(gameWrapper.querySelector(`[data-board-index='${boardIndex}']`), player);
-        }
-        
-        activeBoardIndex = lastCellIndex;
-        if (activeBoardIndex === null || mainBoardState[activeBoardIndex] !== '') {
-            activeBoardIndex = null;
-        }
-        updateActiveBoardHighlights();
-
-        if (checkWinner(mainBoardState, player)) { endGame(false, player); return true; }
-        if (mainBoardState.every(s => s !== '')) { endGame(false, 'draw'); return true; }
-        return false;
-    }
-    
-    /* The rest of the JS functions (initial game logic, AI, etc.) are unchanged */
-    function setupInitialBoard() {
-        rulesButton.style.display = 'none';
-        const board = document.createElement('div');
-        board.className = 'initial-board';
-        initialBoardState = Array(9).fill('');
-        for (let i=0; i<9; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.dataset.index = i;
-            cell.addEventListener('click', handleInitialClick);
-            board.appendChild(cell);
-        }
-        gameWrapper.appendChild(board);
-    }
     function handleInitialClick(e) {
         if (!gameActive) return;
         const index = parseInt(e.target.dataset.index);
         if (initialBoardState[index] !== '') return;
-
         makeMove(index, HUMAN);
-        if (checkWinner(initialBoardState, HUMAN)) { endGame(true); return; }
-        if (initialBoardState.every(c => c !== '')) { endGame(true); return; }
-
+        if (checkWinner(initialBoardState, HUMAN) || initialBoardState.every(c => c !== '')) {
+            endGame(true); 
+            return;
+        }
         gameActive = false;
         statusDisplay.textContent = 'AI is thinking...';
-        setTimeout(initialAiTurn, 700);
+        aiTurnTimeout = setTimeout(initialAiTurn, 700);
     }
-    function makeMove(index, player, board = null, boardIndex = null) {
-        if (isUltimateMode) {
-            board = localBoards[boardIndex];
-            board[index] = player;
-            const cell = gameWrapper.querySelector(`[data-board-index='${boardIndex}'][data-cell-index='${index}']`);
-            cell.textContent = player;
-            cell.classList.add(player.toLowerCase());
-        } else {
-            board = initialBoardState;
-            board[index] = player;
-            const cell = gameWrapper.querySelector(`[data-index='${index}']`);
-            cell.textContent = player;
-            cell.classList.add(player.toLowerCase());
-        }
-    }
+    
     function handleUltimateClick(e) {
         if (!gameActive) return;
         const { boardIndex, cellIndex } = e.target.dataset;
         const bIndex = parseInt(boardIndex), cIndex = parseInt(cellIndex);
-        
         if (activeBoardIndex !== null && bIndex !== activeBoardIndex) return;
         if (localBoards[bIndex][cIndex] !== '' || mainBoardState[bIndex] !== '') return;
-        
-        makeMove(cIndex, HUMAN, null, bIndex);
+
+        makeMove(cIndex, HUMAN, bIndex);
         if (checkUltimateEnd(cIndex, HUMAN)) return;
 
         gameActive = false;
         statusDisplay.textContent = 'AI is thinking...';
-        setTimeout(ultimateAiTurn, 700);
+        aiTurnTimeout = setTimeout(ultimateAiTurn, 700);
     }
+    
+    function makeMove(index, player, boardIndex = null) {
+        let cell;
+        if (isUltimateMode) {
+            localBoards[boardIndex][index] = player;
+            cell = gameWrapper.querySelector(`[data-board-index='${boardIndex}'][data-cell-index='${index}']`);
+        } else {
+            initialBoardState[index] = player;
+            cell = gameWrapper.querySelector(`[data-index='${index}']`);
+        }
+        cell.textContent = player;
+        cell.classList.add(player.toLowerCase());
+    }
+
+    function endGame(isInitialGame, winner = 'draw') {
+        gameActive = false;
+        if (isInitialGame) {
+            statusDisplay.textContent = "A worthy effort... but inevitable.";
+            setTimeout(() => {
+                statusDisplay.textContent = "Now, for the real challenge.";
+                isUltimateMode = true;
+                initGame(true);
+            }, 2500);
+        } else {
+            statusDisplay.textContent = winner === 'draw' ? "It's a Draw!" : `${winner} Wins the Game!`;
+            updateActiveBoardHighlights();
+        }
+    }
+
     function initialAiTurn() {
         let bestScore = -Infinity, move;
         for (let i = 0; i < 9; i++) {
@@ -280,6 +275,7 @@
         gameActive = true;
         statusDisplay.textContent = `Your Turn (${HUMAN})`;
     }
+
     function minimax(board, isMaximizing) {
         if (checkWinner(board, HUMAN)) return -1;
         if (checkWinner(board, AI)) return 1;
@@ -295,29 +291,46 @@
         }
         return bestScore;
     }
-    function endGame(isInitialGame, winner = 'draw') {
-        gameActive = false;
-        if (isInitialGame) {
-            statusDisplay.textContent = "A worthy effort... but inevitable.";
-            setTimeout(() => {
-                statusDisplay.textContent = "Now, let's play for real.";
-                isUltimateMode = true;
-                initGame(true);
-            }, 2500);
-        } else {
-            statusDisplay.textContent = winner === 'draw' ? "It's a Draw!" : `${winner} Wins the Game!`;
-        }
-    }
+    
     function ultimateAiTurn() {
         const move = findBestUltimateMove();
         if (move) {
-            makeMove(move.cellIndex, AI, null, move.boardIndex);
+            makeMove(move.cellIndex, AI, move.boardIndex);
             if(checkUltimateEnd(move.cellIndex, AI)) return;
-        } else { endGame(false, 'draw'); }
-        
+        } else { 
+            endGame(false, 'draw'); 
+        }
         gameActive = true;
         statusDisplay.textContent = `Your Turn (${HUMAN})`;
+        // BUG FIX: Highlight is now updated AFTER the AI turn is fully complete.
+        updateActiveBoardHighlights();
     }
+
+    function checkUltimateEnd(lastCellIndex, player) {
+        const boardIndex = activeBoardIndex;
+        // This logic is simplified; it relies on the fact that `handleUltimateClick` ensures the move is valid.
+        if (mainBoardState[boardIndex] === '') {
+            if (checkWinner(localBoards[boardIndex], player)) {
+                mainBoardState[boardIndex] = player;
+                handleLocalWin(gameWrapper.querySelector(`[data-board-index='${boardIndex}']`), player);
+            } else if (localBoards[boardIndex].every(cell => cell !== '')) {
+                mainBoardState[boardIndex] = 'draw';
+                handleLocalWin(gameWrapper.querySelector(`[data-board-index='${boardIndex}']`), 'draw');
+            }
+        }
+        
+        // This is the core state update that determines the next turn's highlight.
+        activeBoardIndex = lastCellIndex;
+        if (activeBoardIndex === null || mainBoardState[activeBoardIndex] !== '') {
+            activeBoardIndex = null;
+        }
+        
+        if (checkWinner(mainBoardState, player)) { endGame(false, player); return true; }
+        if (mainBoardState.every(s => s !== '')) { endGame(false, 'draw'); return true; }
+
+        return false;
+    }
+    
     function findBestUltimateMove() {
         const moves = getValidMoves();
         if (moves.length === 0) return null;
@@ -327,24 +340,31 @@
         });
         return moves[0];
     }
+
     function getValidMoves() {
         const moves = [];
         const targetBoards = (activeBoardIndex === null) 
             ? [0,1,2,3,4,5,6,7,8].filter(i => mainBoardState[i] === '') 
             : [activeBoardIndex];
         for (const bIndex of targetBoards) {
-            for(let cIndex=0; cIndex<9; cIndex++) {
-                if(localBoards[bIndex][cIndex] === '') moves.push({boardIndex: bIndex, cellIndex: cIndex});
+            if(localBoards && localBoards[bIndex]) {
+                for(let cIndex=0; cIndex<9; cIndex++) {
+                    if(localBoards[bIndex][cIndex] === '') moves.push({boardIndex: bIndex, cellIndex: cIndex});
+                }
             }
         }
         return moves;
     }
+
     function checkWinner(board, player) {
+        if(!board) return false;
         return WIN_CONDITIONS.some(combo => combo.every(index => board[index] === player));
     }
-    restartButton.addEventListener('click', () => initGame(isUltimateMode));
-    rulesButton.addEventListener('click', () => rulesModal.classList.add('visible'));
-    closeRulesButton.addEventListener('click', () => rulesModal.classList.remove('visible'));
+    
+    if (restartButton) restartButton.addEventListener('click', () => initGame(isUltimateMode));
+    if (rulesButton) rulesButton.addEventListener('click', () => rulesModal && rulesModal.classList.add('visible'));
+    if (closeRulesButton) closeRulesButton.addEventListener('click', () => rulesModal && rulesModal.classList.remove('visible'));
+    
     initGame(false);
 </script>
 </body>
