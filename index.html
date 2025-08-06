@@ -6,85 +6,53 @@
     <title>DeveloperCrcodiles' Portal</title>
     <style>
         :root {
-            --glow-color-normal: #bb86fc;
-            --glow-color-win: #03dac6;
-            --glow-color-lose: #ff4d4d;
+            --color-primary: #bb86fc; /* Purple for titles and player X */
+            --color-secondary: #03dac6; /* Teal for links and borders */
+            --color-danger: #ff4d4d;    /* Red for AI player O */
+            --color-background: #121212;
+            --color-surface: #2c2c2e;
+            --color-text: #e0e0e0;
+            --color-text-alt: #a0a0a0;
         }
 
         body { 
             display: flex; 
-            flex-direction: column; /* Allow vertical stacking */
             justify-content: center; 
             align-items: center; 
-            height: 100vh; 
+            min-height: 100vh;
             margin: 0; 
-            background: #121212; 
+            padding: 40px 15px; /* Add padding for smaller screens */
+            background: var(--color-background); 
             font-family: monospace; 
-            color: #e0e0e0;
+            color: var(--color-text);
             text-align: center;
-            overflow: hidden; /* Hide scrollbars */
         }
-
-        .container {
-            position: relative;
-            width: 350px;
-            height: 450px;
-        }
-
-        /* --- Server Styles --- */
-        .server-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            cursor: pointer;
-            transition: opacity 0.5s ease-in-out;
-        }
-        
-        .server-container svg {
-            width: 150px;
-            height: 150px;
-            filter: drop-shadow(0 0 5px var(--glow-color-normal)) 
-                    drop-shadow(0 0 15px var(--glow-color-normal));
-            transition: filter 0.5s ease-in-out;
-        }
-
-        .server-body { fill: #2c2c2e; }
-        .server-light { fill: var(--glow-color-normal); transition: fill 0.5s ease-in-out; }
-
-        /* Blinking Animations */
-        @keyframes blinking-glow {
-            0%, 100% { filter: drop-shadow(0 0 5px) drop-shadow(0 0 15px); }
-            50% { filter: drop-shadow(0 0 10px) drop-shadow(0 0 25px); }
-        }
-
-        .server-container.animate .server-light {
-            animation: blinking-glow 2s infinite ease-in-out;
-            animation-play-state: running;
-        }
-        
-        .server-container.server-lose .server-light,
-        .server-container.server-lose svg {
-            --glow-color-current: var(--glow-color-lose);
-            animation-play-state: running !important;
-        }
-
-        .server-container .server-light { --glow-color-current: var(--glow-color-normal); }
-        .server-container.server-lose .server-light { fill: var(--glow-color-lose); }
-        .server-container.animate .server-light { animation-name: blinking-glow; animation-timing-function: ease-in-out; animation-duration: 2s; animation-iteration-count: infinite; }
-        .server-container .server-light { animation-play-state: paused; }
-        
-        /* --- Tic-Tac-Toe Game Styles --- */
-        .game-container {
-            position: absolute;
-            width: 100%;
-            height: 100%;
+        .container { 
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            transition: opacity 0.5s ease-in-out;
         }
+
+        /* --- Header Section --- */
+        h1 { font-size: 2.5em; color: var(--color-primary); }
+        p { font-size: 1.2em; color: var(--color-text-alt); max-width: 400px; }
+        a.github-button {
+            display: inline-block;
+            margin-top: 10px;
+            margin-bottom: 50px; /* Space between header and game */
+            padding: 10px 20px;
+            border: 2px solid var(--color-secondary);
+            color: var(--color-secondary);
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        a.github-button:hover { 
+            background-color: var(--color-secondary); 
+            color: var(--color-background); 
+        }
+
+        /* --- Tic-Tac-Toe Game Styles --- */
         .game-board {
             display: grid;
             grid-template-columns: repeat(3, 100px);
@@ -95,8 +63,8 @@
         .cell {
             width: 100px;
             height: 100px;
-            border: 2px solid var(--glow-color-win);
-            box-shadow: 0 0 10px var(--glow-color-win);
+            border: 2px solid var(--color-secondary);
+            box-shadow: 0 0 10px var(--color-secondary);
             border-radius: 10px;
             cursor: pointer;
             display: flex;
@@ -105,53 +73,63 @@
             font-size: 4em;
             font-weight: bold;
         }
-        .cell.x { color: var(--glow-color-normal); text-shadow: 0 0 10px var(--glow-color-normal); }
-        .cell.o { color: var(--glow-color-lose); text-shadow: 0 0 10px var(--glow-color-lose); }
-        .status { font-size: 1.5em; height: 30px; color: #a0a0a0; }
-        
-        /* --- Utility --- */
-        .hidden {
-            opacity: 0;
-            pointer-events: none;
+        .cell.x { 
+            color: var(--color-primary); 
+            text-shadow: 0 0 10px var(--color-primary); 
+        }
+        .cell.o { 
+            color: var(--color-danger); 
+            text-shadow: 0 0 10px var(--color-danger); 
+        }
+        .status { 
+            font-size: 1.5em; 
+            height: 30px; 
+            color: var(--color-text-alt); 
+        }
+        .restart-button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            border: 2px solid var(--color-secondary);
+            color: var(--color-secondary);
+            background-color: transparent;
+            font-family: monospace;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .restart-button:hover {
+            background-color: var(--color-secondary);
+            color: var(--color-background);
         }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <!-- The Server Icon -->
-        <div id="server" class="server-container animate">
-            <svg viewBox="0 0 24 24">
-                <path class="server-body" d="M3 4h18v4H3V4m0 5h18v4H3v-4m0 5h18v4H3v-4z"/>
-                <path class="server-light" d="M5 6h2v2H5V6m0 5h2v2H5v-2m0 5h2v2H5v-2z"/>
-            </svg>
-        </div>
+        <!-- Header Info -->
+        <h1>DeveloperCrcodiles</h1>
+        <p>A developer-in-training, exploring the world of self-hosting and servers. Try to beat my AI in a game of Tic-Tac-Toe below!</p>
+        <a href="https://github.com/DeveloperCrcodiles" target="_blank" class="github-button">View My Projects on GitHub</a>
 
-        <!-- The Tic-Tac-Toe Game -->
-        <div id="game" class="game-container hidden">
+        <!-- Tic-Tac-Toe Game -->
+        <div class="game-container">
             <h2 class="status">Your Turn (X)</h2>
             <div class="game-board">
-                <div class="cell" data-index="0"></div>
-                <div class="cell" data-index="1"></div>
-                <div class="cell" data-index="2"></div>
-                <div class="cell" data-index="3"></div>
-                <div class="cell" data-index="4"></div>
-                <div class="cell" data-index="5"></div>
-                <div class="cell" data-index="6"></div>
-                <div class="cell" data-index="7"></div>
-                <div class="cell" data-index="8"></div>
+                <div class="cell" data-index="0"></div><div class="cell" data-index="1"></div><div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div><div class="cell" data-index="4"></div><div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div><div class="cell" data-index="7"></div><div class="cell" data-index="8"></div>
             </div>
+            <button class="restart-button">Restart Game</button>
         </div>
     </div>
 
 <script>
-    const serverContainer = document.getElementById('server');
-    const gameContainer = document.getElementById('game');
-    const statusDisplay = gameContainer.querySelector('.status');
-    const cells = gameContainer.querySelectorAll('.cell');
+    const statusDisplay = document.querySelector('.status');
+    const restartButton = document.querySelector('.restart-button');
+    const cells = document.querySelectorAll('.cell');
 
     let board = ['', '', '', '', '', '', '', '', ''];
-    let gameActive = false;
+    let gameActive = true;
     const humanPlayer = 'X';
     const aiPlayer = 'O';
 
@@ -161,69 +139,49 @@
         [0, 4, 8], [2, 4, 6]
     ];
 
-    serverContainer.addEventListener('click', startGame);
-
-    function startGame() {
-        // Reset server appearance
-        serverContainer.classList.remove('server-lose');
-        
-        // Hide server, show game
-        serverContainer.classList.add('hidden');
-        gameContainer.classList.remove('hidden');
-
-        // Reset game state
-        board = ['', '', '', '', '', '', '', '', ''];
-        gameActive = true;
-        statusDisplay.textContent = `Your Turn (${humanPlayer})`;
-        cells.forEach(cell => {
-            cell.textContent = '';
-            cell.className = 'cell';
-        });
-    }
-
-    cells.forEach(cell => {
-        cell.addEventListener('click', handleCellClick);
-    });
-
     function handleCellClick(e) {
         const index = e.target.getAttribute('data-index');
-        if (board[index] !== '' || !gameActive) {
-            return;
-        }
+        if (board[index] !== '' || !gameActive) return;
+        
         makeMove(index, humanPlayer);
 
-        if (checkWinner(board, humanPlayer)) {
-            endGame('win');
-            return;
-        }
-        if (isBoardFull(board)) {
-            endGame('draw');
-            return;
-        }
+        if (checkEndCondition()) return;
 
         // AI's turn
         statusDisplay.textContent = `AI is thinking...`;
-        setTimeout(aiMove, 700);
+        gameActive = false; // Disable board during AI's turn
+        setTimeout(() => {
+            aiMove();
+            gameActive = true;
+        }, 700);
     }
 
     function aiMove() {
         const bestMove = findBestMove(board);
         makeMove(bestMove, aiPlayer);
-
+        checkEndCondition();
+    }
+    
+    function checkEndCondition() {
+        if (checkWinner(board, humanPlayer)) {
+            endGame('win');
+            return true;
+        }
         if (checkWinner(board, aiPlayer)) {
             endGame('lose');
-            return;
+            return true;
         }
         if (isBoardFull(board)) {
             endGame('draw');
-            return;
+            return true;
         }
         statusDisplay.textContent = `Your Turn (${humanPlayer})`;
+        return false;
     }
 
     function makeMove(index, player) {
         board[index] = player;
-        const cell = gameContainer.querySelector(`[data-index='${index}']`);
+        const cell = document.querySelector(`[data-index='${index}']`);
         cell.textContent = player;
         cell.classList.add(player.toLowerCase());
     }
@@ -231,19 +189,20 @@
     function endGame(result) {
         gameActive = false;
         let message = '';
-        if (result === 'win') message = 'You Win!';
-        else if (result === 'lose') message = 'You Lose!';
+        if (result === 'win') message = 'You Win! (Impossible!)';
+        else if (result === 'lose') message = 'AI Wins!';
         else message = 'It\'s a Draw!';
         statusDisplay.textContent = message;
+    }
 
-        if (result === 'lose') {
-            serverContainer.classList.add('server-lose');
-        }
-
-        setTimeout(() => {
-            gameContainer.classList.add('hidden');
-            serverContainer.classList.remove('hidden');
-        }, 2000); // Wait 2 seconds before showing the server again
+    function handleRestartGame() {
+        gameActive = true;
+        board = ['', '', '', '', '', '', '', '', ''];
+        statusDisplay.textContent = `Your Turn (${humanPlayer})`;
+        cells.forEach(cell => {
+            cell.textContent = '';
+            cell.className = 'cell';
+        });
     }
 
     // --- AI Logic (Minimax Algorithm) ---
@@ -253,7 +212,7 @@
         for (let i = 0; i < 9; i++) {
             if (currentBoard[i] === '') {
                 currentBoard[i] = aiPlayer;
-                let score = minimax(currentBoard, 0, false);
+                let score = minimax(currentBoard, false);
                 currentBoard[i] = ''; // backtrack
                 if (score > bestScore) {
                     bestScore = score;
@@ -266,7 +225,7 @@
 
     const scores = { X: -1, O: 1, draw: 0 };
 
-    function minimax(currentBoard, depth, isMaximizing) {
+    function minimax(currentBoard, isMaximizing) {
         if (checkWinner(currentBoard, humanPlayer)) return scores.X;
         if (checkWinner(currentBoard, aiPlayer)) return scores.O;
         if (isBoardFull(currentBoard)) return scores.draw;
@@ -276,9 +235,8 @@
             for (let i = 0; i < 9; i++) {
                 if (currentBoard[i] === '') {
                     currentBoard[i] = aiPlayer;
-                    let score = minimax(currentBoard, depth + 1, false);
+                    bestScore = Math.max(bestScore, minimax(currentBoard, false));
                     currentBoard[i] = '';
-                    bestScore = Math.max(score, bestScore);
                 }
             }
             return bestScore;
@@ -287,25 +245,23 @@
             for (let i = 0; i < 9; i++) {
                 if (currentBoard[i] === '') {
                     currentBoard[i] = humanPlayer;
-                    let score = minimax(currentBoard, depth + 1, true);
+                    bestScore = Math.min(bestScore, minimax(currentBoard, true));
                     currentBoard[i] = '';
-                    bestScore = Math.min(score, bestScore);
                 }
             }
             return bestScore;
         }
     }
 
-    function checkWinner(currentBoard, player) {
-        return winningConditions.some(combination => 
-            combination.every(index => currentBoard[index] === player)
-        );
+    function checkWinner(board, player) {
+        return winningConditions.some(combo => combo.every(index => board[index] === player));
+    }
+    function isBoardFull(board) {
+        return board.every(cell => cell !== '');
     }
 
-    function isBoardFull(currentBoard) {
-        return currentBoard.every(cell => cell !== '');
-    }
-
+    cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+    restartButton.addEventListener('click', handleRestartGame);
 </script>
 
 </body>
